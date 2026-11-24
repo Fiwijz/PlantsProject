@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plant Cloud - ทะเบียนพรรณไม้</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #2d6a4f;
+      --primary-light: #40916c;
+      --primary-bg: #f0f7f4;
+      --accent: #d8f3dc;
+      --text-dark: #1b4332;
+      --text-muted: #52796f;
+      --white: #ffffff;
+      --danger: #c1121f;
+      --shadow: 0 4px 20px rgba(45, 106, 79, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Prompt', sans-serif;
+    }
+
+    body {
+      background-color: var(--primary-bg);
+      color: var(--text-dark);
+      line-height: 1.6;
+      padding-bottom: 50px;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: var(--white);
+      padding: 2.2rem 1rem;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    header p {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin-top: 0.3rem;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.2rem;
+    }
+
+    .auth-bar {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 0.9rem 1.2rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      border: 1px solid var(--accent);
+    }
+
+    .auth-status {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge-admin {
+      background: var(--accent);
+      color: var(--primary);
+      padding: 0.2rem 0.65rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-guest {
+      background: #e8f5ee;
+      color: var(--primary);
+      padding: 0.2rem 0.65rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .btn-auth {
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      padding: 0.5rem 1.1rem;
+      border-radius: 9px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-auth:hover {
+      background: var(--primary-light);
+    }
+
+    .btn-logout {
+      background: #fff0f0;
+      color: var(--danger);
+      border: 1px solid #f5a3a3;
+      padding: 0.48rem 1rem;
+      border-radius: 9px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .btn-logout:hover {
+      background: #ffe0e0;
+    }
+
+    .alert-banner {
+      display: none;
+      padding: 0.9rem 1.2rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .alert-banner.show {
+      display: block;
+    }
+
+    .alert-success {
+      background: #d8f3dc;
+      color: #1b4332;
+      border: 1px solid #74c69d;
+    }
+
+    .alert-error {
+      background: #ffe5e5;
+      color: var(--danger);
+      border: 1px solid #f5a3a3;
+    }
+
+    /* ส่วนกราฟหลังบ้านเฉพาะแอดมิน */
+    .admin-dashboard {
+      display: none;
+      background: var(--white);
+      border-radius: 16px;
+      padding: 1.8rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+      border: 1px solid var(--accent);
+    }
+
+    .admin-dashboard.visible {
+      display: block;
+    }
+
+    .admin-dashboard h2 {
+      font-size: 1.3rem;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-box {
+      background: var(--primary-bg);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .stat-label {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 0.2rem;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .chart-card {
+      background: #fafdfb;
+      border: 1px solid #e1efe8;
+      border-radius: 12px;
+      padding: 1rem;
+      min-height: 260px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-card h3 {
+      font-size: 1rem;
+      color: var(--text-dark);
+      margin-bottom: 0.75rem;
+    }
+
+    .chart-canvas-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 200px;
+    }
+
+    /* ฟอร์มเพิ่มพรรณไม้ (เปิดให้ทุกคนใช้งานได้) */
+    .form-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 1.8rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 2.5rem;
+      border: 1px solid var(--accent);
+    }
+
+    .form-card h2 {
+      font-size: 1.3rem;
+      color: var(--primary);
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 0.75rem;
+    }
+
+    .form-group label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.35rem;
+      color: var(--text-muted);
+    }
+
+    .form-group input {
+      padding: 0.7rem 0.9rem;
+      border: 1.5px solid #d1e3dc;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: var(--primary-light);
+    }
+
+    .helper-text {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .btn-submit {
+      margin-top: 0.6rem;
+      background-color: var(--primary);
+      color: var(--white);
+      border: none;
+      padding: 0.8rem 1.8rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--primary-light);
+    }
+
+    .btn-submit:disabled {
+      background-color: #95a5a6;
+      cursor: not-allowed;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .search-box {
+      padding: 0.6rem 1rem;
+      border: 1.5px solid #d1e3dc;
+      border-radius: 20px;
+      width: 260px;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    .plant-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .plant-card {
+      background: var(--white);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .plant-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(45, 106, 79, 0.15);
+    }
+
+    .img-wrapper {
+      position: relative;
+      width: 100%;
+      height: 190px;
+      background-color: var(--accent);
+    }
+
+    .plant-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ปุ่มแก้ไขรูปเปิดให้ทุกคนใช้งานได้ */
+    .btn-edit-img {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(27, 67, 50, 0.9);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-edit-img:hover {
+      background: var(--primary);
+      transform: scale(1.03);
+    }
+
+    .plant-body {
+      padding: 1.2rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .plant-code {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.2rem 0.7rem;
+      border-radius: 20px;
+      margin-bottom: 0.5rem;
+      width: fit-content;
+    }
+
+    .plant-name {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 0.4rem;
+    }
+
+    .plant-location {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-msg {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-box h3 {
+      font-size: 1.2rem;
+      color: var(--primary);
+      margin-bottom: 0.3rem;
+    }
+
+    .modal-sub {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .preview-box {
+      width: 100%;
+      height: 180px;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--accent);
+      margin-bottom: 1rem;
+      border: 1px solid #d1e3dc;
+    }
+
+    .preview-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      margin-top: 1.2rem;
+    }
+
+    .btn-cancel {
+      background: #e9ecef;
+      color: #333;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .btn-save {
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      padding: 0.6rem 1.3rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .btn-save:hover {
+      background: var(--primary-light);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🌿 Plant Cloud</h1>
+    <p>ระบบฐานข้อมูลและทะเบียนพรรณไม้ออนไลน์</p>
+  </header>
+
+  <div class="container">
+    <div class="auth-bar">
+      <div class="auth-status" id="auth-status">
+        <span class="badge-guest">ผู้ใช้งานทั่วไป</span>
+        <span>เพิ่มพรรณไม้และแก้ไขรูปภาพได้ทันที • ล็อกอินแอดมินเพื่อดูกราฟหลังบ้าน</span>
+      </div>
+      <div>
+        <button type="button" class="btn-auth" id="open-login-btn">🔐 ล็อกอินแอดมิน</button>
+        <button type="button" class="btn-logout" id="logout-btn" style="display: none;">ออกจากระบบ</button>
+      </div>
+    </div>
+
+    <div id="alert-banner" class="alert-banner"></div>
+
+    <!-- กราฟหลังบ้านและการใช้งาน (แสดงเฉพาะแอดมินที่ล็อกอินแล้ว) -->
+    <section class="admin-dashboard" id="admin-dashboard">
+      <h2>📊 แดชบอร์ดแอดมิน: กราฟข้อมูลและการใช้งาน</h2>
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">พรรณไม้ทั้งหมด</div>
+          <div class="stat-value" id="stat-total-plants">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">มีรูปภาพแนบแล้ว</div>
+          <div class="stat-value" id="stat-with-image">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">จำนวนสถานที่ปลูก</div>
+          <div class="stat-value" id="stat-locations">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">การบันทึก/แก้ไขในเซสชันนี้</div>
+          <div class="stat-value" id="stat-session-actions">0</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>จำนวนพรรณไม้แยกตามสถานที่ปลูก</h3>
+          <div class="chart-canvas-wrap">
+            <canvas id="locationChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>สัดส่วนรูปภาพและกิจกรรมการใช้งาน</h3>
+          <div class="chart-canvas-wrap">
+            <canvas id="usageChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ฟอร์มเพิ่มพรรณไม้ (ผู้ใช้งานทั่วไปและแอดมินใช้ได้) -->
+    <div class="form-card">
+      <h2>➕ เพิ่มข้อมูลพรรณไม้ใหม่</h2>
+      <form id="plant-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="plant_code">รหัสพรรณไม้ *</label>
+            <input type="text" id="plant_code" placeholder="เช่น P001" required>
+          </div>
+          <div class="form-group">
+            <label for="thai_name">ชื่อพรรณไม้ (ภาษาไทย) *</label>
+            <input type="text" id="thai_name" placeholder="เช่น ชบา, มะลิซ้อน" required>
+          </div>
+          <div class="form-group">
+            <label for="location">บริเวณที่พบ / สถานที่ปลูก</label>
+            <input type="text" id="location" placeholder="เช่น สวนหน้าอาคาร 1">
+          </div>
+          <div class="form-group">
+            <label for="image_url">ลิงก์รูปภาพ (https://...)</label>
+            <input type="url" id="image_url" placeholder="https://example.com/plant.jpg">
+            <span class="helper-text">ต้องขึ้นต้นด้วย https:// หรือ http://</span>
+          </div>
+        </div>
+        <button type="submit" class="btn-submit" id="submit-btn">บันทึกข้อมูลพรรณไม้</button>
+      </form>
+    </div>
+
+    <div class="section-header">
+      <h2>📋 รายการพรรณไม้ทั้งหมด (<span id="count">0</span>)</h2>
+      <input type="text" id="search-input" class="search-box" placeholder="🔍 ค้นหาชื่อ, รหัส หรือสถานที่...">
+    </div>
+
+    <div id="plant-list" class="plant-grid">
+      <div class="status-msg">กำลังโหลดข้อมูลพรรณไม้...</div>
+    </div>
+  </div>
+
+  <!-- Modal ล็อกอินแอดมิน -->
+  <div id="login-modal" class="modal-backdrop">
+    <div class="modal-box">
+      <h3>🔐 เข้าสู่ระบบแอดมิน</h3>
+      <p class="modal-sub">ใช้อีเมลและรหัสผ่านแอดมินเพื่อเปิดดูกราฟหลังบ้านและการใช้งาน</p>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="admin_email">อีเมลแอดมิน</label>
+          <input type="email" id="admin_email" placeholder="admin@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="admin_password">รหัสผ่าน</label>
+          <input type="password" id="admin_password" placeholder="••••••••" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-cancel" id="cancel-login-btn">ยกเลิก</button>
+          <button type="submit" class="btn-save" id="submit-login-btn">เข้าสู่ระบบ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal แก้ไขรูปภาพ -->
+  <div id="edit-img-modal" class="modal-backdrop">
+    <div class="modal-box">
+      <h3>🖼️ แก้ไขรูปภาพพรรณไม้</h3>
+      <p class="modal-sub" id="modal-plant-info">-</p>
+      <div class="preview-box">
+        <img id="modal-preview-img" src="" alt="ตัวอย่างรูปภาพ">
+      </div>
+      <div class="form-group">
+        <label for="edit_image_url">ลิงก์รูปภาพใหม่ (https://...)</label>
+        <input type="url" id="edit_image_url" placeholder="https://example.com/new-plant.jpg">
+        <span class="helper-text">เว้นว่างเพื่อกลับไปใช้รูปเริ่มต้น</span>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="cancel-img-btn">ยกเลิก</button>
+        <button type="button" class="btn-save" id="save-img-btn">บันทึกรูปภาพ</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const db = window.supabase.createClient(
+      'https://lrtexowjejlyspampsqf.supabase.co',
+      'sb_publishable_zE4Tiuv82X_Z211snuUjZg_J_CXcyyc'
+    );
+
+    let allPlants = [];
+    let editingTarget = null;
+    let hasIdColumn = true;
+    let currentUser = null;
+    let locationChartInstance = null;
+    let usageChartInstance = null;
+
+    const usageStats = {
+      addedCount: 0,
+      editedImageCount: 0,
+      searchCount: 0
+    };
+
+    const defaultImage = 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80';
+
+    const alertBanner = document.getElementById('alert-banner');
+    const authStatusEl = document.getElementById('auth-status');
+    const openLoginBtn = document.getElementById('open-login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const adminDashboard = document.getElementById('admin-dashboard');
+
+    const loginModal = document.getElementById('login-modal');
+    const loginForm = document.getElementById('login-form');
+    const cancelLoginBtn = document.getElementById('cancel-login-btn');
+    const submitLoginBtn = document.getElementById('submit-login-btn');
+
+    const imgModal = document.getElementById('edit-img-modal');
+    const modalInfo = document.getElementById('modal-plant-info');
+    const modalPreview = document.getElementById('modal-preview-img');
+    const editUrlInput = document.getElementById('edit_image_url');
+    const saveImgBtn = document.getElementById('save-img-btn');
+    const cancelImgBtn = document.getElementById('cancel-img-btn');
+
+    function showAlert(message, type = 'success') {
+      alertBanner.textContent = message;
+      alertBanner.className = `alert-banner show alert-${type}`;
+      setTimeout(() => {
+        alertBanner.classList.remove('show');
+      }, 5000);
+    }
+
+    function applyAuthUI(user) {
+      currentUser = user;
+      if (user) {
+        adminDashboard.classList.add('visible');
+        openLoginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+        authStatusEl.innerHTML = `
+          <span class="badge-admin">โหมดแอดมิน</span>
+          <span>ล็อกอินแล้วในชื่อ <strong>${user.email}</strong> (กำลังแสดงกราฟหลังบ้าน)</span>
+        `;
+        updateAdminCharts();
+      } else {
+        adminDashboard.classList.remove('visible');
+        openLoginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+        authStatusEl.innerHTML = `
+          <span class="badge-guest">ผู้ใช้งานทั่วไป</span>
+          <span>เพิ่มพรรณไม้และแก้ไขรูปภาพได้ทันที • ล็อกอินแอดมินเพื่อดูกราฟหลังบ้าน</span>
+        `;
+      }
+    }
+
+    async function initAuth() {
+      const { data: { session } } = await db.auth.getSession();
+      applyAuthUI(session?.user || null);
+
+      db.auth.onAuthStateChange((_event, session) => {
+        applyAuthUI(session?.user || null);
+      });
+    }
+
+    function updateAdminCharts() {
+      if (!currentUser || typeof Chart === 'undefined') return;
+
+      const total = allPlants.length;
+      const withImg = allPlants.filter(p => p.image_url && p.image_url.trim() !== '').length;
+      const withoutImg = total - withImg;
+
+      const locMap = {};
+      for (const p of allPlants) {
+        const loc = (p.location && p.location.trim()) || 'ไม่ระบุสถานที่';
+        locMap[loc] = (locMap[loc] || 0) + 1;
+      }
+
+      const locLabels = Object.keys(locMap);
+      const locValues = Object.values(locMap);
+      const sessionTotal = usageStats.addedCount + usageStats.editedImageCount;
+
+      document.getElementById('stat-total-plants').textContent = total;
+      document.getElementById('stat-with-image').textContent = withImg;
+      document.getElementById('stat-locations').textContent = locLabels.length;
+      document.getElementById('stat-session-actions').textContent = sessionTotal;
+
+      const locCtx = document.getElementById('locationChart').getContext('2d');
+      if (locationChartInstance) locationChartInstance.destroy();
+      locationChartInstance = new Chart(locCtx, {
+        type: 'bar',
+        data: {
+          labels: locLabels.length ? locLabels : ['ไม่มีข้อมูล'],
+          datasets: [{
+            label: 'จำนวนพรรณไม้',
+            data: locValues.length ? locValues : [0],
+            backgroundColor: '#40916c',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } }
+          }
+        }
+      });
+
+      const usageCtx = document.getElementById('usageChart').getContext('2d');
+      if (usageChartInstance) usageChartInstance.destroy();
+      usageChartInstance = new Chart(usageCtx, {
+        type: 'doughnut',
+        data: {
+          labels: [
+            'พรรณไม้ที่มีรูปภาพ',
+            'พรรณไม้ที่ใช้รูปเริ่มต้น',
+            `เพิ่มใหม่ (${usageStats.addedCount})`,
+            `แก้ไขรูป (${usageStats.editedImageCount})`,
+            `ค้นหา (${usageStats.searchCount})`
+          ],
+          datasets: [{
+            data: [
+              withImg,
+              withoutImg,
+              usageStats.addedCount,
+              usageStats.editedImageCount,
+              usageStats.searchCount
+            ],
+            backgroundColor: ['#2d6a4f', '#95d5b2', '#52b788', '#74c69d', '#b7e4c7']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    openLoginBtn.addEventListener('click', () => {
+      loginModal.classList.add('active');
+      document.getElementById('admin_email').focus();
+    });
+
+    function closeLoginModal() {
+      loginModal.classList.remove('active');
+      loginForm.reset();
+    }
+
+    cancelLoginBtn.addEventListener('click', closeLoginModal);
+    loginModal.addEventListener('click', (e) => {
+      if (e.target === loginModal) closeLoginModal();
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitLoginBtn.disabled = true;
+      submitLoginBtn.textContent = 'กำลังเข้าสู่ระบบ...';
+
+      const email = document.getElementById('admin_email').value.trim();
+      const password = document.getElementById('admin_password').value;
+
+      const { error } = await db.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        showAlert('เข้าสู่ระบบแอดมินไม่สำเร็จ: ' + error.message, 'error');
+      } else {
+        closeLoginModal();
+        showAlert('เข้าสู่ระบบแอดมินเรียบร้อยแล้ว', 'success');
+      }
+
+      submitLoginBtn.disabled = false;
+      submitLoginBtn.textContent = 'เข้าสู่ระบบ';
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+      const { error } = await db.auth.signOut();
+      if (error) {
+        showAlert('ออกจากระบบไม่สำเร็จ: ' + error.message, 'error');
+      } else {
+        showAlert('ออกจากระบบแอดมินเรียบร้อยแล้ว', 'success');
+      }
+    });
+
+    modalPreview.onerror = () => {
+      modalPreview.src = defaultImage;
+    };
+
+    async function loadPlants() {
+      const container = document.getElementById('plant-list');
+
+      let res = await db
+        .from('plants')
+        .select('id, plant_code, thai_name, location, image_url')
+        .order('plant_code');
+
+      if (res.error && res.error.message.includes('id')) {
+        hasIdColumn = false;
+        res = await db
+          .from('plants')
+          .select('plant_code, thai_name, location, image_url')
+          .order('plant_code');
+      }
+
+      if (res.error) {
+        container.innerHTML = `<div class="status-msg">เกิดข้อผิดพลาด: ${res.error.message}</div>`;
+        showAlert('โหลดข้อมูลไม่สำเร็จ: ' + res.error.message, 'error');
+        return;
+      }
+
+      allPlants = (res.data || []).map((row, idx) => ({
+        ...row,
+        _key: row.id !== undefined ? `id:${row.id}` : `code:${row.plant_code}:${idx}`
+      }));
+
+      renderPlants(allPlants);
+      updateAdminCharts();
+    }
+
+    function renderPlants(plants) {
+      const container = document.getElementById('plant-list');
+      const countSpan = document.getElementById('count');
+      countSpan.textContent = plants.length;
+
+      if (plants.length === 0) {
+        container.innerHTML = '<div class="status-msg">ไม่พบข้อมูลพรรณไม้</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      for (const item of plants) {
+        const card = document.createElement('div');
+        card.className = 'plant-card';
+        const imgSrc = item.image_url && item.image_url.trim() !== '' ? item.image_url : defaultImage;
+
+        card.innerHTML = `
+          <div class="img-wrapper">
+            <img src="${imgSrc}" alt="${item.thai_name}" class="plant-img" onerror="this.src='${defaultImage}'">
+            <button type="button" class="btn-edit-img" data-key="${item._key}">✏️ แก้ไขรูป</button>
+          </div>
+          <div class="plant-body">
+            <div>
+              <span class="plant-code">รหัส: ${item.plant_code}</span>
+              <h3 class="plant-name">${item.thai_name}</h3>
+            </div>
+            <div class="plant-location">📍 ${item.location || 'ไม่ระบุสถานที่'}</div>
+          </div>
+        `;
+
+        card.querySelector('.btn-edit-img').addEventListener('click', () => {
+          openEditImageModal(item._key);
+        });
+
+        container.appendChild(card);
+      }
+    }
+
+    function openEditImageModal(key) {
+      const plant = allPlants.find(p => p._key === key);
+      if (!plant) return;
+
+      editingTarget = plant;
+      modalInfo.textContent = `รหัส ${plant.plant_code} - ${plant.thai_name}`;
+      editUrlInput.value = plant.image_url || '';
+      modalPreview.src = plant.image_url && plant.image_url.trim() !== '' ? plant.image_url : defaultImage;
+      imgModal.classList.add('active');
+    }
+
+    editUrlInput.addEventListener('input', () => {
+      const val = editUrlInput.value.trim();
+      modalPreview.src = val !== '' ? val : defaultImage;
+    });
+
+    function closeEditImageModal() {
+      imgModal.classList.remove('active');
+      editingTarget = null;
+    }
+
+    cancelImgBtn.addEventListener('click', closeEditImageModal);
+    imgModal.addEventListener('click', (e) => {
+      if (e.target === imgModal) closeEditImageModal();
+    });
+
+    saveImgBtn.addEventListener('click', async () => {
+      if (!editingTarget) return;
+
+      const rawUrl = editUrlInput.value.trim();
+      if (rawUrl !== '' && !/^https?:\/\//i.test(rawUrl)) {
+        showAlert('ลิงก์รูปภาพต้องขึ้นต้นด้วย https:// หรือ http://', 'error');
+        return;
+      }
+
+      saveImgBtn.disabled = true;
+      saveImgBtn.textContent = 'กำลังบันทึก...';
+
+      const newImageUrl = rawUrl || null;
+
+      let query = db.from('plants').update({ image_url: newImageUrl });
+      if (hasIdColumn && editingTarget.id !== undefined) {
+        query = query.eq('id', editingTarget.id);
+      } else {
+        query = query.eq('plant_code', editingTarget.plant_code);
+      }
+
+      const { data, error } = await query.select();
+
+      if (error) {
+        showAlert('อัปเดตรูปภาพไม่สำเร็จ: ' + error.message, 'error');
+      } else if (!data || data.length === 0) {
+        showAlert('ไม่ได้อัปเดตแถวใดเลย ตรวจสอบ RLS Policy สำหรับ UPDATE ใน Supabase', 'error');
+      } else {
+        usageStats.editedImageCount += 1;
+        closeEditImageModal();
+        await loadPlants();
+        showAlert('บันทึกรูปภาพลงฐานข้อมูลเรียบร้อยแล้ว', 'success');
+      }
+
+      saveImgBtn.disabled = false;
+      saveImgBtn.textContent = 'บันทึกรูปภาพ';
+    });
+
+    document.getElementById('plant-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const rawUrl = document.getElementById('image_url').value.trim();
+      if (rawUrl !== '' && !/^https?:\/\//i.test(rawUrl)) {
+        showAlert('ลิงก์รูปภาพต้องขึ้นต้นด้วย https:// หรือ http://', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'กำลังบันทึก...';
+
+      const newPlant = {
+        plant_code: document.getElementById('plant_code').value.trim(),
+        thai_name: document.getElementById('thai_name').value.trim(),
+        location: document.getElementById('location').value.trim() || null,
+        image_url: rawUrl || null
+      };
+
+      const { error } = await db.from('plants').insert([newPlant]);
+
+      if (error) {
+        showAlert('บันทึกข้อมูลไม่สำเร็จ: ' + error.message, 'error');
+      } else {
+        usageStats.addedCount += 1;
+        document.getElementById('plant-form').reset();
+        await loadPlants();
+        showAlert('เพิ่มข้อมูลพรรณไม้เรียบร้อยแล้ว', 'success');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'บันทึกข้อมูลพรรณไม้';
+    });
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const keyword = e.target.value.toLowerCase();
+      if (keyword.trim() !== '') {
+        usageStats.searchCount += 1;
+        updateAdminCharts();
+      }
+      const filtered = allPlants.filter(item =>
+        (item.plant_code && item.plant_code.toLowerCase().includes(keyword)) ||
+        (item.thai_name && item.thai_name.toLowerCase().includes(keyword)) ||
+        (item.location && item.location.toLowerCase().includes(keyword))
+      );
+      renderPlants(filtered);
+    });
+
+    initAuth();
+    loadPlants();
+  </script>
+</body>
+</html>
